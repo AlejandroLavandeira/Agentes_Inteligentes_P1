@@ -129,6 +129,13 @@ class SumoAI:
         (enemigo_detectado, dist_enemigo, angulo_enemigo) = self.analizar_laser()
         enemigo_muy_cerca = enemigo_detectado and dist_enemigo < self.UMBRAL_DE_EMPUJE
 
+		if enemigo_detectado:
+            # Convertimos el angulo a grados para que sea mas facil de leer
+            angulo_grados = math.degrees(angulo_enemigo)
+            rospy.loginfo("[%s] Estado: %s | Enemigo DETECTADO a %.2f m y %.1f deg", self.ns, self.estado_actual, dist_enemigo, angulo_grados)
+        else:
+            rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
+			
         # --- LOGICA DE TRANSICIONES (CON PRIORIDAD) ---
         # 1. La condicion de maxima prioridad: evitar el borde
         if self.detecto_borde():
