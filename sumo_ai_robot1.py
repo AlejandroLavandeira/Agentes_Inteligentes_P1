@@ -29,7 +29,7 @@ class SumoAI:
 
         # Parametros de Combate
         self.UMBRAL_DETECCION_ENEMIGO = 3.0 # Consideramos enemigo a cualquier objeto a menos de 3m
-        self.UMBRAL_DE_EMPUJE = 0.4 # Distancia a la que pasamos de flanquear a empujar (40cm)
+        self.UMBRAL_DE_EMPUJE = 0.8 # Distancia a la que pasamos de flanquear a empujar (40cm)
         self.UMBRAL_PERDIDA_EMPUJE = -0.01 # Si nuestra velocidad lineal.x es negativa, nos ganan
 
         # Parametros de Movimiento del Robot
