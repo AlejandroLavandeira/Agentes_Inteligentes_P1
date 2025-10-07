@@ -32,6 +32,8 @@ class SumoAI:
         self.UMBRAL_DE_EMPUJE = 0.8 # Distancia a la que pasamos de flanquear a empujar (40cm)
         self.UMBRAL_PERDIDA_EMPUJE = -0.01 # Si nuestra velocidad lineal.x es negativa, nos ganan
 
+		self.maniobra_start_time = None
+		self.DURACION_MANIOBRA_DEFENSIVA = 1.5
         # Parametros de Movimiento del Robot
         self.VELOCIDAD_LINEAL_MAX = 0.5
         self.VELOCIDAD_ANGULAR_MAX = 0.8
@@ -157,11 +159,15 @@ class SumoAI:
             elif self.me_estan_ganando():
 		rospy.loginfo("Entramos en zona defensiva")
                 self.estado_actual = self.ESTADO_MANIOBRA_DEFENSIVA
+				self.maniobra_start_time = rospy.Time.now()
         
         elif self.estado_actual == self.ESTADO_MANIOBRA_DEFENSIVA:
-            # Este es un estado temporal. Tras la maniobra, volvemos a buscar.
-            # La accion se ejecuta una vez y la transicion es inmediata.
-            self.estado_actual = self.ESTADO_BUSCANDO
+            # Esta es la condicion de salida: ¿ha pasado el tiempo definido?
+            if self.maniobra_start_time is not None:
+                duracion_transcurrida = (rospy.Time.now() - self.maniobra_start_time).to_sec()
+                if duracion_transcurrida > self.DURACION_MANIOBRA_DEFENSIVA:
+                    self.estado_actual = self.ESTADO_BUSCANDO
+                    self.maniobra_start_time = None # Reseteamos el timer para la proxima vez
 
         elif self.estado_actual == self.ESTADO_EVITANDO_BORDE:
             # Si ya no detectamos el borde, volvemos a buscar
