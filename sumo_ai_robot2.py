@@ -37,6 +37,14 @@ class SumoAI:
         rospy.Subscriber(self.ns + '/scan', LaserScan, self.callback_laser)
         rospy.Subscriber(self.ns + '/odom', Odometry, self.callback_odometria)
 
+        rospy.loginfo("Esperando 4 segundos para que Gazebo inicie...")
+        try:
+            rospy.sleep(4) # Pausa de 4 segundos sincronizada con el reloj de ROS/Gazebo
+        except rospy.ROSInterruptException:
+            rospy.logwarn("Pausa interrumpida por cierre del nodo.")
+            return # Salimos si el nodo se cierra durante la pausa
+        rospy.loginfo("¡Iniciando IA!")
+        
         # --- 5. El "Corazon" de la IA ---
         rospy.Timer(rospy.Duration(0.1), self.ejecutar_ciclo)
 
