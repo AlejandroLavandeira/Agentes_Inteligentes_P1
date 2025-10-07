@@ -35,7 +35,7 @@ class SumoAI:
 		self.maniobra_start_time = None
 		self.DURACION_MANIOBRA_DEFENSIVA = 1.5
         # Parametros de Movimiento del Robot
-        self.VELOCIDAD_LINEAL_MAX = 0.5
+		self.VELOCIDAD_LINEAL_MAX = 0.5
         self.VELOCIDAD_ANGULAR_MAX = 0.8
 
         # --- 3. Almacenes de Datos de Sensores ---
@@ -161,13 +161,13 @@ class SumoAI:
                 self.estado_actual = self.ESTADO_MANIOBRA_DEFENSIVA
 				self.maniobra_start_time = rospy.Time.now()
         
-        elif self.estado_actual == self.ESTADO_MANIOBRA_DEFENSIVA:
+		elif self.estado_actual == self.ESTADO_MANIOBRA_DEFENSIVA:
             # Esta es la condicion de salida: ¿ha pasado el tiempo definido?
-            if self.maniobra_start_time is not None:
-                duracion_transcurrida = (rospy.Time.now() - self.maniobra_start_time).to_sec()
-                if duracion_transcurrida > self.DURACION_MANIOBRA_DEFENSIVA:
-                    self.estado_actual = self.ESTADO_BUSCANDO
-                    self.maniobra_start_time = None # Reseteamos el timer para la proxima vez
+			if self.maniobra_start_time is not None:
+				duracion_transcurrida = (rospy.Time.now() - self.maniobra_start_time).to_sec()
+				if duracion_transcurrida > self.DURACION_MANIOBRA_DEFENSIVA:
+					self.estado_actual = self.ESTADO_BUSCANDO
+					self.maniobra_start_time = None # Reseteamos el timer para la proxima vez
 
         elif self.estado_actual == self.ESTADO_EVITANDO_BORDE:
             # Si ya no detectamos el borde, volvemos a buscar
