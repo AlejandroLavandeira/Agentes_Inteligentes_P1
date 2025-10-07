@@ -94,6 +94,11 @@ class SumoAI:
 
         (enemigo_detectado, dist_enemigo, angulo_enemigo) = self.analizar_laser()
 
+        if enemigo_detectado:
+            angulo_grados = math.degrees(angulo_enemigo)
+            rospy.loginfo("[%s] Estado: %s | Enemigo DETECTADO a %.2f m y %.1f deg", self.ns, self.estado_actual, dist_enemigo, angulo_grados)
+        else:
+            rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
         # --- LOGICA DE TRANSICIONES (Mas simple y directa) ---
         if self.detecto_borde():
             self.estado_actual = self.ESTADO_EVITANDO_BORDE
