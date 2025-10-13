@@ -22,7 +22,7 @@ class SumoAI:
         # Estado inicial
         self.estado_actual = self.ESTADO_BUSCANDO
         self.estado_previo = None # Util para depuracion
-	self.game_over = False
+		self.game_over = False
 
         # --- 2. Parametros y Umbrales ---
         # Parametros del Dohyo y Seguridad
@@ -34,8 +34,8 @@ class SumoAI:
         self.UMBRAL_DE_EMPUJE = 0.8 # Distancia a la que pasamos de flanquear a empujar (40cm)
         self.UMBRAL_PERDIDA_EMPUJE = -0.01 # Si nuestra velocidad lineal.x es negativa, nos ganan
 
-	self.maniobra_start_time = None
-	self.DURACION_MANIOBRA_DEFENSIVA = 1.5
+		self.maniobra_start_time = None
+		self.DURACION_MANIOBRA_DEFENSIVA = 1.5
         # Parametros de Movimiento del Robot
         self.VELOCIDAD_LINEAL_MAX = 0.5
         self.VELOCIDAD_ANGULAR_MAX = 0.8
@@ -121,11 +121,11 @@ class SumoAI:
         return self.velocidad_actual.x < self.UMBRAL_PERDIDA_EMPUJE
 
     def winner_callback(self, msg):
-	if self.game_over:
-		return
-	self.game_over = True
-	self.mover(0,0)
-	rospy.signal_shutdown("Combate finalizado")
+		if self.game_over:
+			return
+		self.game_over = True
+		self.mover(0,0)
+		rospy.signal_shutdown("Combate finalizado")
 
     # --- El Bucle Principal de la Maquina de Estados ---
     def ejecutar_ciclo(self, event):
@@ -143,15 +143,15 @@ class SumoAI:
         (enemigo_detectado, dist_enemigo, angulo_enemigo) = self.analizar_laser()
         enemigo_muy_cerca = enemigo_detectado and dist_enemigo < self.UMBRAL_DE_EMPUJE
 
-	if enemigo_detectado:
+		if enemigo_detectado:
             # Convertimos el angulo a grados para que sea mas facil de leer
             angulo_grados = math.degrees(angulo_enemigo)
             rospy.loginfo("[%s] Estado: %s | Enemigo DETECTADO a %.2f m y %.1f deg", self.ns, self.estado_actual, dist_enemigo, angulo_grados)
         else:
             rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
 
-	if self.game_over:
-		return
+		if self.game_over:
+			return
 			
         # --- LOGICA DE TRANSICIONES (CON PRIORIDAD) ---
         # 1. La condicion de maxima prioridad: evitar el borde
@@ -172,9 +172,9 @@ class SumoAI:
             if not enemigo_detectado:
                 self.estado_actual = self.ESTADO_BUSCANDO
             elif self.me_estan_ganando():
-		rospy.loginfo("Entramos en zona defensiva")
+				rospy.loginfo("Entramos en zona defensiva")
                 self.estado_actual = self.ESTADO_MANIOBRA_DEFENSIVA
-		self.maniobra_start_time = rospy.Time.now()
+				self.maniobra_start_time = rospy.Time.now()
         
         elif self.estado_actual == self.ESTADO_MANIOBRA_DEFENSIVA:
             # Esta es la condicion de salida
