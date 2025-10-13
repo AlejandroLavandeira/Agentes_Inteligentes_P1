@@ -5,6 +5,7 @@ import math
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
 
 class SumoAI:
     def __init__(self, ns):
@@ -21,6 +22,7 @@ class SumoAI:
         # Estado inicial
         self.estado_actual = self.ESTADO_BUSCANDO
         self.estado_previo = None # Util para depuracion
+	self.game_over = False
 
         # --- 2. Parametros y Umbrales ---
         # Parametros del Dohyo y Seguridad
@@ -32,6 +34,8 @@ class SumoAI:
         self.UMBRAL_DE_EMPUJE = 0.8 # Distancia a la que pasamos de flanquear a empujar (40cm)
         self.UMBRAL_PERDIDA_EMPUJE = -0.01 # Si nuestra velocidad lineal.x es negativa, nos ganan
 
+	self.maniobra_start_time = None
+	self.DURACION_MANIOBRA_DEFENSIVA = 1.5
         # Parametros de Movimiento del Robot
         self.VELOCIDAD_LINEAL_MAX = 0.5
         self.VELOCIDAD_ANGULAR_MAX = 0.8
@@ -50,6 +54,9 @@ class SumoAI:
 
         # Suscriptor a los datos de odometria
         rospy.Subscriber(self.ns + '/odom', Odometry, self.callback_odometria)
+
+	# Suscriptor a los datos de winner
+        rospy.Subscriber("/sumo/winner", String, self.winner_callback)
 
         try:
             rospy.sleep(4) # Pausa de 4 segundos sincronizada con el reloj de ROS/Gazebo
@@ -113,6 +120,13 @@ class SumoAI:
         # Si el enemigo esta muy cerca y nuestra velocidad es negativa, estamos perdiendo.
         return self.velocidad_actual.x < self.UMBRAL_PERDIDA_EMPUJE
 
+    def winner_callback(self, msg):
+	if self.game_over:
+		return
+	self.game_over = True
+	self.mover(0,0)
+	rospy.signal_shutdown("Combate finalizado")
+
     # --- El Bucle Principal de la Maquina de Estados ---
     def ejecutar_ciclo(self, event):
         # No hacemos nada hasta que no tengamos datos de los sensores
@@ -129,12 +143,15 @@ class SumoAI:
         (enemigo_detectado, dist_enemigo, angulo_enemigo) = self.analizar_laser()
         enemigo_muy_cerca = enemigo_detectado and dist_enemigo < self.UMBRAL_DE_EMPUJE
 
-		if enemigo_detectado:
+	if enemigo_detectado:
             # Convertimos el angulo a grados para que sea mas facil de leer
             angulo_grados = math.degrees(angulo_enemigo)
             rospy.loginfo("[%s] Estado: %s | Enemigo DETECTADO a %.2f m y %.1f deg", self.ns, self.estado_actual, dist_enemigo, angulo_grados)
         else:
             rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
+
+	if self.game_over:
+		return
 			
         # --- LOGICA DE TRANSICIONES (CON PRIORIDAD) ---
         # 1. La condicion de maxima prioridad: evitar el borde
@@ -157,11 +174,15 @@ class SumoAI:
             elif self.me_estan_ganando():
 		rospy.loginfo("Entramos en zona defensiva")
                 self.estado_actual = self.ESTADO_MANIOBRA_DEFENSIVA
+		self.maniobra_start_time = rospy.Time.now()
         
         elif self.estado_actual == self.ESTADO_MANIOBRA_DEFENSIVA:
-            # Este es un estado temporal. Tras la maniobra, volvemos a buscar.
-            # La accion se ejecuta una vez y la transicion es inmediata.
-            self.estado_actual = self.ESTADO_BUSCANDO
+            # Esta es la condicion de salida
+            if self.maniobra_start_time is not None:
+                duracion_transcurrida = (rospy.Time.now() - self.maniobra_start_time).to_sec()
+                if duracion_transcurrida > self.DURACION_MANIOBRA_DEFENSIVA:
+                    self.estado_actual = self.ESTADO_BUSCANDO
+                    self.maniobra_start_time = None # Reseteamos el timer para la proxima vez
 
         elif self.estado_actual == self.ESTADO_EVITANDO_BORDE:
             # Si ya no detectamos el borde, volvemos a buscar
@@ -187,7 +208,7 @@ class SumoAI:
 
         elif self.estado_actual == self.ESTADO_MANIOBRA_DEFENSIVA:
             # Retrocedemos y giramos bruscamente para escapar
-            self.mover(-self.VELOCIDAD_LINEAL_MAX, self.VELOCIDAD_ANGULAR_MAX)
+            self.mover(self.VELOCIDAD_LINEAL_MAX * 0.3, -self.VELOCIDAD_ANGULAR_MAX)
 
         elif self.estado_actual == self.ESTADO_EVITANDO_BORDE:
             # Retrocedemos para alejarnos del borde. El giro depende de nuestra posicion.
