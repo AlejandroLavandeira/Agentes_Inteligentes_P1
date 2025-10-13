@@ -20,7 +20,7 @@ class SumoAI:
         # Estado inicial
         self.estado_actual = self.ESTADO_PATRULLANDO
         self.estado_previo = None
-	self.game_over = False
+		self.game_over = False
 
         # --- 2. Parametros y Umbrales (pueden ser los mismos que robot1) ---
         self.RADIO_DOHYO = 2.0
@@ -38,7 +38,7 @@ class SumoAI:
         self.pub_cmd_vel = rospy.Publisher(self.ns + '/cmd_vel', Twist, queue_size=1)
         rospy.Subscriber(self.ns + '/scan', LaserScan, self.callback_laser)
         rospy.Subscriber(self.ns + '/odom', Odometry, self.callback_odometria)
-	rospy.Subscriber("/sumo/winner", String, self.winner_callback)
+		rospy.Subscriber("/sumo/winner", String, self.winner_callback)
 
         try:
             rospy.sleep(4) # Pausa de 4 segundos sincronizada con el reloj de ROS/Gazebo
@@ -87,11 +87,11 @@ class SumoAI:
             return (True, min_dist, angulo_enemigo)
 
     def winner_callback(self,msg):
-	if self.game_over:
-		return
-	self.game_over=True
-	self.mover(0,0)
-	rospy.signal_shutdown("El combate ha terminado")
+		if self.game_over:
+			return
+		self.game_over=True
+		self.mover(0,0)
+		rospy.signal_shutdown("El combate ha terminado")
 
     # --- El Bucle Principal de la Maquina de Estados (LOGICA DIFERENTE) ---
     def ejecutar_ciclo(self, event):
