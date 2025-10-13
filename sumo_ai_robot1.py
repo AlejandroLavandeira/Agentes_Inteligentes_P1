@@ -115,8 +115,8 @@ class SumoAI:
     def me_estan_ganando(self):
         if self.velocidad_actual is None:
             return False
-	elif self.velocidad_actual.x < self.UMBRAL_PERDIDA_EMPUJE:
-		rospy.loginfo("La velocidad actual es menor a nuestro umbral, estamos yendo hacia atras")
+		elif self.velocidad_actual.x < self.UMBRAL_PERDIDA_EMPUJE:
+			rospy.loginfo("La velocidad actual es menor a nuestro umbral, estamos yendo hacia atras")
         # Si el enemigo esta muy cerca y nuestra velocidad es negativa, estamos perdiendo.
         return self.velocidad_actual.x < self.UMBRAL_PERDIDA_EMPUJE
 
