@@ -5,6 +5,7 @@ import math
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
+from std_msgs.msg import String
 
 class SumoAI:
     def __init__(self, ns):
@@ -19,6 +20,7 @@ class SumoAI:
         # Estado inicial
         self.estado_actual = self.ESTADO_PATRULLANDO
         self.estado_previo = None
+	self.game_over = False
 
         # --- 2. Parametros y Umbrales (pueden ser los mismos que robot1) ---
         self.RADIO_DOHYO = 2.0
@@ -36,12 +38,13 @@ class SumoAI:
         self.pub_cmd_vel = rospy.Publisher(self.ns + '/cmd_vel', Twist, queue_size=1)
         rospy.Subscriber(self.ns + '/scan', LaserScan, self.callback_laser)
         rospy.Subscriber(self.ns + '/odom', Odometry, self.callback_odometria)
+	rospy.Subscriber("/sumo/winner", String, self.winner_callback)
 
         try:
             rospy.sleep(4) # Pausa de 4 segundos sincronizada con el reloj de ROS/Gazebo
         except rospy.ROSInterruptException:
             return # Salimos si el nodo se cierra durante la pausa
-        
+
         # --- 5. El "Corazon" de la IA ---
         rospy.Timer(rospy.Duration(0.1), self.ejecutar_ciclo)
 
@@ -83,6 +86,13 @@ class SumoAI:
             angulo_enemigo = self.datos_laser.angle_min + indice_min * self.datos_laser.angle_increment
             return (True, min_dist, angulo_enemigo)
 
+    def winner_callback(self,msg):
+	if self.game_over:
+		return
+	self.game_over=True
+	self.mover(0,0)
+	rospy.signal_shutdown("El combate ha terminado")
+
     # --- El Bucle Principal de la Maquina de Estados (LOGICA DIFERENTE) ---
     def ejecutar_ciclo(self, event):
         if self.datos_laser is None or self.posicion_actual is None:
@@ -94,11 +104,15 @@ class SumoAI:
 
         (enemigo_detectado, dist_enemigo, angulo_enemigo) = self.analizar_laser()
 
-        if enemigo_detectado:
-            angulo_grados = math.degrees(angulo_enemigo)
-            rospy.loginfo("[%s] Estado: %s | Enemigo DETECTADO a %.2f m y %.1f deg", self.ns, self.estado_actual, dist_enemigo, angulo_grados)
-        else:
-            rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
+        #if enemigo_detectado:
+        #    angulo_grados = math.degrees(angulo_enemigo)
+        #    rospy.loginfo("[%s] Estado: %s | Enemigo DETECTADO a %.2f m y %.1f deg", self.ns, self.estado_actual, dist_enemigo, angulo_grados)
+        #else:
+        #    rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
+
+	if self.game_over:
+		return
+
         # --- LOGICA DE TRANSICIONES (Mas simple y directa) ---
         if self.detecto_borde():
             self.estado_actual = self.ESTADO_EVITANDO_BORDE
