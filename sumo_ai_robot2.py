@@ -110,8 +110,8 @@ class SumoAI:
         #else:
         #    rospy.loginfo("[%s] Estado: %s | No se detecta enemigo.", self.ns, self.estado_actual)
 
-	if self.game_over:
-		return
+		if self.game_over:
+			return
 
         # --- LOGICA DE TRANSICIONES (Mas simple y directa) ---
         if self.detecto_borde():
